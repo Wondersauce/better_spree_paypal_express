@@ -9,7 +9,10 @@ module Spree
       tax_adjustments = additional_adjustments.tax
       shipping_adjustments = additional_adjustments.shipping
 
-      additional_adjustments.eligible.each do |adjustment|
+      # will cover order-level adjustments:
+      promo_adjustments = order.adjustments.promotion
+
+      (promo_adjustments + additional_adjustments.eligible).each do |adjustment|
         next if (tax_adjustments + shipping_adjustments).include?(adjustment)
         items << {
           :Name => adjustment.label,
@@ -74,13 +77,20 @@ module Spree
     private
 
     def line_item(item)
+      # for line-item-level discounts
+      if item.promo_total.present?
+        price = item.price + item.promo_total
+      else
+        price = item.price
+      end
+
       {
           :Name => item.product.name,
           :Number => item.variant.sku,
           :Quantity => item.quantity,
           :Amount => {
               :currencyID => item.order.currency,
-              :value => item.price
+              :value => price
           },
           :ItemCategory => "Physical"
       }
