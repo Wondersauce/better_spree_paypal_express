@@ -1,11 +1,14 @@
 require 'paypal-sdk-merchant'
 
-# hacking this here so that the Spree Refund#process! method doesn't choke.
-# snippet from #process! below:
-# text = response.params['message'] || response.params['response_reason_text'] || response.message
+# hacking this here so that the Spree Refund doesn't choke.
+# it expects these methods on a response
 module PayPalErrorHandling
   def message
     self.errors.collect{ |e| e.long_message }.join(",")
+  end
+
+  def authorization
+    self.refund_transaction_id
   end
 
   def params
@@ -151,6 +154,7 @@ module Spree
 
       # the extend here adds a #params method to this response for the sake of
       # the Spree refund flow
+      # also need response.authorization => the transaction ID
       refund_transaction_response.extend(PayPalErrorHandling)
       refund_transaction_response
     end
