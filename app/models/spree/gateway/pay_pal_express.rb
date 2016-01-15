@@ -134,6 +134,10 @@ module Spree
           :state => 'completed'
         )
       end
+
+      # the extend here adds a #params method to this response for the sake of
+      # the Spree refund flow
+      refund_transaction_response.extend(PayPalErrorHandling)
       refund_transaction_response
     end
 
